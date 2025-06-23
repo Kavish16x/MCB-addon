@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const { addonBuilder } = require('stremio-addon-sdk');
 const manifest = require('./manifest.json');
 
@@ -31,19 +32,12 @@ builder.defineStreamHandler(args => {
   return ch ? Promise.resolve({ streams: [{ url: ch.url }] }) : { streams: [] };
 });
 
-const app = require('express')();
+const app = express();
+app.use(cors());
 
-app.get('/manifest.json', (req, res) => {
-  res.json(manifest);
-});
-
-app.get('/catalog/tv/mbc.json', (req, res) => {
-  builder.catalog({ type: 'tv', id: 'mbc' }).then(result => res.json(result));
-});
-
-app.get('/stream/tv/:id.json', (req, res) => {
-  builder.stream({ type: 'tv', id: req.params.id }).then(result => res.json(result));
-});
+app.get('/manifest.json', (req, res) => res.json(manifest));
+app.get('/catalog/tv/mbc.json', (req, res) => builder.catalog({ type: 'tv', id: 'mbc' }).then(result => res.json(result)));
+app.get('/stream/tv/:id.json', (req, res) => builder.stream({ type: 'tv', id: req.params.id }).then(result => res.json(result)));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ MBC add-on running on port ${PORT}`));
