@@ -16,7 +16,19 @@ const streams = [
   { id: "Events", name: "Events.mu", url: "https://hlsonline.in/hls/lps123.m3u8" }
 ];
 
+const app = express();
+app.use(cors());
+
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
+const builder = new addonBuilder(manifest);
+
 builder.defineCatalogHandler(() => {
+  console.log('Catalog requested');
   return Promise.resolve({
     metas: streams.map(s => ({
       id: s.id,
@@ -28,16 +40,36 @@ builder.defineCatalogHandler(() => {
 });
 
 builder.defineStreamHandler(args => {
+  console.log('Stream requested for id:', args.id);
   const ch = streams.find(s => s.id === args.id);
-  return ch ? Promise.resolve({ streams: [{ url: ch.url }] }) : { streams: [] };
+  if (!ch) {
+    return Promise.resolve({ streams: [] });
+  }
+  return Promise.resolve({ streams: [{ url: ch.url }] });
 });
 
-const app = express();
-app.use(cors());
+app.get('/manifest.json', (req, res) => {
+  console.log('Manifest requested');
+  res.json(manifest);
+});
 
-app.get('/manifest.json', (req, res) => res.json(manifest));
-app.get('/catalog/tv/mbc.json', (req, res) => builder.catalog({ type: 'tv', id: 'mbc' }).then(result => res.json(result)));
-app.get('/stream/tv/:id.json', (req, res) => builder.stream({ type: 'tv', id: req.params.id }).then(result => res.json(result)));
+app.get('/catalog/tv/mbc.json', (req, res) => {
+  builder.catalog({ type: 'tv', id: 'mbc' })
+    .then(result => res.json(result))
+    .catch(err => {
+      console.error('Catalog error:', err);
+      res.status(500).send('Internal Server Error');
+    });
+});
+
+app.get('/stream/tv/:id.json', (req, res) => {
+  builder.stream({ type: 'tv', id: req.params.id })
+    .then(result => res.json(result))
+    .catch(err => {
+      console.error('Stream error:', err);
+      res.status(500).send('Internal Server Error');
+    });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ MBC add-on running on port ${PORT}`));
