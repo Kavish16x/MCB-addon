@@ -3,6 +3,9 @@ const cors = require('cors');
 const { addonBuilder } = require('stremio-addon-sdk');
 const manifest = require('./manifest.json');
 
+const app = express();
+app.use(cors());
+
 const builder = new addonBuilder(manifest);
 
 const streams = [
@@ -16,19 +19,7 @@ const streams = [
   { id: "Events", name: "Events.mu", url: "https://hlsonline.in/hls/lps123.m3u8" }
 ];
 
-const app = express();
-app.use(cors());
-
-// Log all incoming requests
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
-
-const builder = new addonBuilder(manifest);
-
 builder.defineCatalogHandler(() => {
-  console.log('Catalog requested');
   return Promise.resolve({
     metas: streams.map(s => ({
       id: s.id,
@@ -40,18 +31,11 @@ builder.defineCatalogHandler(() => {
 });
 
 builder.defineStreamHandler(args => {
-  console.log('Stream requested for id:', args.id);
   const ch = streams.find(s => s.id === args.id);
-  if (!ch) {
-    return Promise.resolve({ streams: [] });
-  }
-  return Promise.resolve({ streams: [{ url: ch.url }] });
+  return ch ? Promise.resolve({ streams: [{ url: ch.url }] }) : Promise.resolve({ streams: [] });
 });
 
-app.get('/manifest.json', (req, res) => {
-  console.log('Manifest requested');
-  res.json(manifest);
-});
+app.get('/manifest.json', (req, res) => res.json(manifest));
 
 app.get('/catalog/tv/mbc.json', (req, res) => {
   builder.catalog({ type: 'tv', id: 'mbc' })
