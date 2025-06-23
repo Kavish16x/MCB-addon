@@ -1,0 +1,13 @@
+{
+  "name": "mbc-stremio-addon",
+  "version": "1.0.0",
+  "description": "MBC Mauritius Live TV addon for Stremio",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "stremio-addon-sdk": "^0.7.5"
+  }
+}
