@@ -1,0 +1,16 @@
+{
+  "id": "org.my.mbctv",
+  "version": "1.0.0",
+  "name": "MBC Mauritius Live",
+  "description": "Streams MBC channels live via internet",
+  "resources": ["stream", "catalog"],
+  "types": ["tv"],
+  "catalogs": [
+    {
+      "type": "tv",
+      "id": "mbc",
+      "name": "MBC Live"
+    }
+  ],
+  "streaming": true
+}
